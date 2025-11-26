@@ -1,6 +1,7 @@
 package codingdojo;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CustomerSync {
 
@@ -95,6 +96,10 @@ public class CustomerSync {
             customer.setCustomerType(CustomerType.COMPANY);
         } else {
             customer.setCustomerType(CustomerType.PERSON);
+            Integer externalPoints = externalCustomer.getBonusPointsBalance();
+            if (!Objects.equals(externalPoints, customer.getBonusPointsBalance())) {
+                customer.setBonusPointsBalance(externalPoints);
+            }
         }
     }
 

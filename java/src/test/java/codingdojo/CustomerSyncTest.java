@@ -290,6 +290,64 @@ public class CustomerSyncTest {
         Approvals.verify(toAssert);
     }
 
+    @Test
+    public void syncPersonUpdatesBonusPoints(){
+        String externalId = "12345";
+
+        ExternalCustomer externalCustomer = createExternalPrivatePerson();
+        externalCustomer.setExternalId(externalId);
+        externalCustomer.setBonusPointsBalance(150);
+
+        Customer customer = new Customer();
+        customer.setCustomerType(CustomerType.PERSON);
+        customer.setInternalId("6789");
+        customer.setExternalId(externalId);
+        customer.setBonusPointsBalance(75);
+
+        FakeDatabase db = new FakeDatabase();
+        db.addCustomer(customer);
+        CustomerSync sut = new CustomerSync(db);
+
+        StringBuilder toAssert = printBeforeState(externalCustomer, db);
+
+        // ACT
+        boolean created = sut.syncWithDataLayer(externalCustomer);
+
+        assertFalse(created);
+        printAfterState(db, toAssert);
+        Approvals.verify(toAssert);
+    }
+
+    @Test
+    public void syncPersonWithNullBonusPoints(){
+        String externalId = "12345";
+
+        ExternalCustomer externalCustomer = createExternalPrivatePerson();
+        externalCustomer.setExternalId(externalId);
+        externalCustomer.setBonusPointsBalance(null);
+
+        Customer customer = new Customer();
+        customer.setCustomerType(CustomerType.PERSON);
+        customer.setInternalId("6789");
+        customer.setExternalId(externalId);
+        customer.setBonusPointsBalance(100);
+
+
+        FakeDatabase db = new FakeDatabase();
+        db.addCustomer(customer);
+        CustomerSync sut = new CustomerSync(db);
+
+        StringBuilder toAssert = printBeforeState(externalCustomer, db);
+
+        // ACT
+        boolean created = sut.syncWithDataLayer(externalCustomer);
+
+        assertFalse(created);
+        printAfterState(db, toAssert);
+        Approvals.verify(toAssert);
+    }
+
+
 
     private ExternalCustomer createExternalPrivatePerson() {
         ExternalCustomer externalCustomer = new ExternalCustomer();
@@ -298,6 +356,7 @@ public class CustomerSyncTest {
         externalCustomer.setAddress(new Address("123 main st", "Stockholm", "SE-123 45"));
         externalCustomer.setPreferredStore("Nordstan");
         externalCustomer.setShoppingLists(Arrays.asList(new ShoppingList("lipstick", "foundation")));
+        externalCustomer.setBonusPointsBalance(null);
         return externalCustomer;
     }
 
@@ -335,4 +394,5 @@ public class CustomerSyncTest {
         toAssert.append(db.printContents());
         return toAssert;
     }
+
 }
