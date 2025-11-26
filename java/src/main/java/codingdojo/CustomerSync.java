@@ -1,13 +1,11 @@
 package codingdojo;
 
-import java.util.List;
-import java.util.Objects;
-
 public class CustomerSync {
 
     private final CustomerDataAccess customerDataAccess;
     private final CustomerMatchStrategy personMatchStrategy;
     private final CustomerMatchStrategy companyMatchStrategy;
+    private final CustomerUpdater customerUpdater;
 
     public CustomerSync(CustomerDataLayer customerDataLayer) {
         this(new CustomerDataAccess(customerDataLayer));
@@ -17,6 +15,7 @@ public class CustomerSync {
         this.customerDataAccess = db;
         this.personMatchStrategy = new PersonMatchStrategy();
         this.companyMatchStrategy = new CompanyMatchStrategy();
+        this.customerUpdater = new CustomerUpdater(customerDataAccess);
     }
 
     public boolean syncWithDataLayer(ExternalCustomer externalCustomer) {
@@ -31,15 +30,7 @@ public class CustomerSync {
         }
 
         CustomerMatches customerMatches = customerMatchStrategy.load(normalizedCustomer, this.customerDataAccess);
-        Customer customer = customerMatches.getCustomer();
-
-        if (customer == null) {
-            customer = new Customer();
-            customer.setExternalId(normalizedCustomer.getExternalId());
-            customer.setMasterExternalId(normalizedCustomer.getExternalId());
-        }
-
-        populateFields(normalizedCustomer, customer);
+        Customer customer = customerUpdater.prepareCustomerForSync(customerMatches, normalizedCustomer);
 
         boolean created = false;
         if (customer.getInternalId() == null) {
@@ -48,71 +39,21 @@ public class CustomerSync {
         } else {
             updateCustomer(customer);
         }
-        updateContactInfo(normalizedCustomer, customer);
+        customerUpdater.updateContactInfo(normalizedCustomer, customer);
+        customerUpdater.updateDuplicates(normalizedCustomer, customerMatches);
 
-        if (customerMatches.hasDuplicates()) {
-            for (Customer duplicate : customerMatches.getDuplicates()) {
-                updateDuplicate(normalizedCustomer, duplicate);
-            }
-        }
-
-        updateRelations(normalizedCustomer, customer);
-        updatePreferredStore(normalizedCustomer, customer);
+        customerUpdater.updateRelations(normalizedCustomer, customer);
+        customerUpdater.updatePreferredStore(normalizedCustomer, customer);
 
         return created;
-    }
-
-    private void updateRelations(NormalizedCustomer normalizedCustomer, Customer customer) {
-        List<ShoppingList> consumerShoppingLists = normalizedCustomer.getShoppingLists();
-        for (ShoppingList consumerShoppingList : consumerShoppingLists) {
-            this.customerDataAccess.updateShoppingList(customer, consumerShoppingList);
-        }
     }
 
     private Customer updateCustomer(Customer customer) {
         return this.customerDataAccess.updateCustomerRecord(customer);
     }
 
-    private void updateDuplicate(NormalizedCustomer normalizedCustomer, Customer duplicate) {
-        if (duplicate == null) {
-            duplicate = new Customer();
-            duplicate.setExternalId(normalizedCustomer.getExternalId());
-            duplicate.setMasterExternalId(normalizedCustomer.getExternalId());
-        }
-
-        duplicate.setName(normalizedCustomer.getName());
-
-        if (duplicate.getInternalId() == null) {
-            createCustomer(duplicate);
-        } else {
-            updateCustomer(duplicate);
-        }
-    }
-
-    private void updatePreferredStore(NormalizedCustomer normalizedCustomer, Customer customer) {
-        customer.setPreferredStore(normalizedCustomer.getPreferredStore());
-    }
-
     private Customer createCustomer(Customer customer) {
         return this.customerDataAccess.createCustomerRecord(customer);
     }
-
-    private void populateFields(NormalizedCustomer normalizedCustomer, Customer customer) {
-        customer.setName(normalizedCustomer.getName());
-        if (normalizedCustomer.isCompany()) {
-            customer.setCompanyNumber(normalizedCustomer.getCompanyNumber());
-            customer.setCustomerType(CustomerType.COMPANY);
-        } else {
-            customer.setCustomerType(CustomerType.PERSON);
-            Integer externalPoints = normalizedCustomer.getBonusPointsBalance();
-            if (!Objects.equals(externalPoints, customer.getBonusPointsBalance())) {
-                customer.setBonusPointsBalance(externalPoints);
-            }
-        }
-    }
-
-    private void updateContactInfo(NormalizedCustomer normalizedCustomer, Customer customer) {
-        customer.setAddress(normalizedCustomer.getPostalAddress());
-    }
-
+    
 }
