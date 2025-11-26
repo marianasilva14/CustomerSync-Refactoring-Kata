@@ -10,6 +10,7 @@ ExternalCustomer {
     externalId='12345'
     companyNumber='null'
     name='Joe Bloggs'
+    bonusPointsBalance='null'
     preferredStore='Nordstan'
     address='123 main st, SE-123 45 Stockholm'
     shoppingLists=[[lipstick, foundation]]
@@ -25,6 +26,7 @@ All Customers {
         internalId='fake internalId'
         name='Joe Bloggs'
         customerType=PERSON
+        bonusPointsBalance='null'
         preferredStore='Nordstan'
         address='123 main st, SE-123 45 Stockholm'
         shoppingLists=[[lipstick, foundation]]

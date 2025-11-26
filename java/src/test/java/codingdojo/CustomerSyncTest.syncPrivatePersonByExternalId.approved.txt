@@ -9,6 +9,7 @@ All Customers {
         internalId='67576'
         name='null'
         customerType=PERSON
+        bonusPointsBalance='null'
         preferredStore='null'
         address='null'
         shoppingLists=[]
@@ -22,6 +23,7 @@ ExternalCustomer {
     externalId='12345'
     companyNumber='null'
     name='Joe Bloggs'
+    bonusPointsBalance='null'
     preferredStore='Nordstan'
     address='123 main st, SE-123 45 Stockholm'
     shoppingLists=[[lipstick, foundation]]
@@ -37,6 +39,7 @@ All Customers {
         internalId='67576'
         name='Joe Bloggs'
         customerType=PERSON
+        bonusPointsBalance='null'
         preferredStore='Nordstan'
         address='123 main st, SE-123 45 Stockholm'
         shoppingLists=[[lipstick, foundation]]

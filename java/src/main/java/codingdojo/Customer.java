@@ -14,6 +14,7 @@ public class Customer {
     private String name;
     private CustomerType customerType;
     private String companyNumber;
+    private Integer bonusPointsBalance;
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
@@ -79,12 +80,20 @@ public class Customer {
         return externalId;
     }
 
+    public Integer getBonusPointsBalance() {
+        return bonusPointsBalance;
+    }
+
     public void setCustomerType(CustomerType customerType) {
         this.customerType = customerType;
     }
 
     public void setInternalId(String internalId) {
         this.internalId = internalId;
+    }
+
+    public void setBonusPointsBalance(Integer bonusPointsBalance) {
+        this.bonusPointsBalance = bonusPointsBalance;
     }
 
     public void addShoppingList(ShoppingList consumerShoppingList) {
@@ -101,11 +110,12 @@ public class Customer {
         Customer customer = (Customer) o;
         return Objects.equals(externalId, customer.externalId) &&
                 Objects.equals(masterExternalId, customer.masterExternalId) &&
-                Objects.equals(companyNumber, customer.companyNumber);
+                Objects.equals(companyNumber, customer.companyNumber) &&
+                Objects.equals(bonusPointsBalance, customer.bonusPointsBalance);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(externalId, masterExternalId, companyNumber);
+        return Objects.hash(externalId, masterExternalId, companyNumber, bonusPointsBalance);
     }
 }
