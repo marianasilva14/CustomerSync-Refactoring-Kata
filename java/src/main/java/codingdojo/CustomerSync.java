@@ -17,21 +17,22 @@ public class CustomerSync {
 
     public boolean syncWithDataLayer(ExternalCustomer externalCustomer) {
 
+        NormalizedCustomer normalizedCustomer = new NormalizedCustomer(externalCustomer);
         CustomerMatches customerMatches;
-        if (externalCustomer.isCompany()) {
-            customerMatches = loadCompany(externalCustomer);
+        if (normalizedCustomer.isCompany()) {
+            customerMatches = loadCompany(normalizedCustomer);
         } else {
-            customerMatches = loadPerson(externalCustomer);
+            customerMatches = loadPerson(normalizedCustomer);
         }
         Customer customer = customerMatches.getCustomer();
 
         if (customer == null) {
             customer = new Customer();
-            customer.setExternalId(externalCustomer.getExternalId());
-            customer.setMasterExternalId(externalCustomer.getExternalId());
+            customer.setExternalId(normalizedCustomer.getExternalId());
+            customer.setMasterExternalId(normalizedCustomer.getExternalId());
         }
 
-        populateFields(externalCustomer, customer);
+        populateFields(normalizedCustomer, customer);
 
         boolean created = false;
         if (customer.getInternalId() == null) {
@@ -40,22 +41,22 @@ public class CustomerSync {
         } else {
             updateCustomer(customer);
         }
-        updateContactInfo(externalCustomer, customer);
+        updateContactInfo(normalizedCustomer, customer);
 
         if (customerMatches.hasDuplicates()) {
             for (Customer duplicate : customerMatches.getDuplicates()) {
-                updateDuplicate(externalCustomer, duplicate);
+                updateDuplicate(normalizedCustomer, duplicate);
             }
         }
 
-        updateRelations(externalCustomer, customer);
-        updatePreferredStore(externalCustomer, customer);
+        updateRelations(normalizedCustomer, customer);
+        updatePreferredStore(normalizedCustomer, customer);
 
         return created;
     }
 
-    private void updateRelations(ExternalCustomer externalCustomer, Customer customer) {
-        List<ShoppingList> consumerShoppingLists = externalCustomer.getShoppingLists();
+    private void updateRelations(NormalizedCustomer normalizedCustomer, Customer customer) {
+        List<ShoppingList> consumerShoppingLists = normalizedCustomer.getShoppingLists();
         for (ShoppingList consumerShoppingList : consumerShoppingLists) {
             this.customerDataAccess.updateShoppingList(customer, consumerShoppingList);
         }
@@ -65,14 +66,14 @@ public class CustomerSync {
         return this.customerDataAccess.updateCustomerRecord(customer);
     }
 
-    private void updateDuplicate(ExternalCustomer externalCustomer, Customer duplicate) {
+    private void updateDuplicate(NormalizedCustomer normalizedCustomer, Customer duplicate) {
         if (duplicate == null) {
             duplicate = new Customer();
-            duplicate.setExternalId(externalCustomer.getExternalId());
-            duplicate.setMasterExternalId(externalCustomer.getExternalId());
+            duplicate.setExternalId(normalizedCustomer.getExternalId());
+            duplicate.setMasterExternalId(normalizedCustomer.getExternalId());
         }
 
-        duplicate.setName(externalCustomer.getName());
+        duplicate.setName(normalizedCustomer.getName());
 
         if (duplicate.getInternalId() == null) {
             createCustomer(duplicate);
@@ -81,36 +82,36 @@ public class CustomerSync {
         }
     }
 
-    private void updatePreferredStore(ExternalCustomer externalCustomer, Customer customer) {
-        customer.setPreferredStore(externalCustomer.getPreferredStore());
+    private void updatePreferredStore(NormalizedCustomer normalizedCustomer, Customer customer) {
+        customer.setPreferredStore(normalizedCustomer.getPreferredStore());
     }
 
     private Customer createCustomer(Customer customer) {
         return this.customerDataAccess.createCustomerRecord(customer);
     }
 
-    private void populateFields(ExternalCustomer externalCustomer, Customer customer) {
-        customer.setName(externalCustomer.getName());
-        if (externalCustomer.isCompany()) {
-            customer.setCompanyNumber(externalCustomer.getCompanyNumber());
+    private void populateFields(NormalizedCustomer normalizedCustomer, Customer customer) {
+        customer.setName(normalizedCustomer.getName());
+        if (normalizedCustomer.isCompany()) {
+            customer.setCompanyNumber(normalizedCustomer.getCompanyNumber());
             customer.setCustomerType(CustomerType.COMPANY);
         } else {
             customer.setCustomerType(CustomerType.PERSON);
-            Integer externalPoints = externalCustomer.getBonusPointsBalance();
+            Integer externalPoints = normalizedCustomer.getBonusPointsBalance();
             if (!Objects.equals(externalPoints, customer.getBonusPointsBalance())) {
                 customer.setBonusPointsBalance(externalPoints);
             }
         }
     }
 
-    private void updateContactInfo(ExternalCustomer externalCustomer, Customer customer) {
-        customer.setAddress(externalCustomer.getPostalAddress());
+    private void updateContactInfo(NormalizedCustomer normalizedCustomer, Customer customer) {
+        customer.setAddress(normalizedCustomer.getPostalAddress());
     }
 
-    public CustomerMatches loadCompany(ExternalCustomer externalCustomer) {
+    public CustomerMatches loadCompany(NormalizedCustomer normalizedCustomer) {
 
-        final String externalId = externalCustomer.getExternalId();
-        final String companyNumber = externalCustomer.getCompanyNumber();
+        final String externalId = normalizedCustomer.getExternalId();
+        final String companyNumber = normalizedCustomer.getCompanyNumber();
 
         CustomerMatches customerMatches = customerDataAccess.loadCompanyCustomer(externalId, companyNumber);
 
@@ -140,8 +141,8 @@ public class CustomerSync {
         return customerMatches;
     }
 
-    public CustomerMatches loadPerson(ExternalCustomer externalCustomer) {
-        final String externalId = externalCustomer.getExternalId();
+    public CustomerMatches loadPerson(NormalizedCustomer normalizedCustomer) {
+        final String externalId = normalizedCustomer.getExternalId();
 
         CustomerMatches customerMatches = customerDataAccess.loadPersonCustomer(externalId);
 
