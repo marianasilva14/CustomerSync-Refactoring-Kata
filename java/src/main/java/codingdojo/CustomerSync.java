@@ -11,8 +11,12 @@ public class CustomerSync {
         this(new CustomerDataAccess(customerDataLayer));
     }
 
-    public CustomerSync(CustomerDataAccess db) {
-        this.repository = new CustomerRepoImplentation(db);
+    public CustomerSync(CustomerDataAccess dataAccess) {
+        this(new CustomerRepoImplentation(dataAccess));
+    }
+
+    public CustomerSync(CustomerRepo repository) {
+        this.repository = repository;
         this.personMatchStrategy = new PersonMatchStrategy();
         this.companyMatchStrategy = new CompanyMatchStrategy();
         this.customerUpdater = new CustomerUpdater(repository);
@@ -29,7 +33,7 @@ public class CustomerSync {
             customerMatchStrategy = this.personMatchStrategy;
         }
 
-        CustomerMatches customerMatches = customerMatchStrategy.load(normalizedCustomer, this.repository);
+        CustomerMatches customerMatches = customerMatchStrategy.load(normalizedCustomer, repository);
         Customer customer = customerUpdater.prepareCustomerForSync(customerMatches, normalizedCustomer);
 
         boolean created = false;
