@@ -1,16 +1,37 @@
-Consumer Match Kata 
-====================
+# Technical Test
 
-Some horrible code to refactor. Concentrate on the "CustomerSync" class. The purpose of the 'syncWithDataLayer' method is to take a ExternalCustomer instance, which has been updated in an external system, and see whether there is a matching Customer in our database. If there is not, create a new Customer to match the incoming ExternalCustomer. If there is one, update it. If there are several matching Customers in our database, update them all (slightly differently).
+Here’s my refactored solution to the CustomerSync Refactoring Kata.
+The main goal was to separate business logic from data, while keeping the existing behavior unchanged.
+I also implemented the requested feature to sync the new `bonusPointsBalance` field for private customers.
 
-There is a unit test there to start you off. It gives you a basic amount of coverage but has a rather weak assertion.
+## Here’s a summary of the main changes I made:
 
-The change you need to make
----------------------------
+- `CustomerSync` now only coordinates the steps; it no longer mixes business rules with database calls.
+- Matching logic has been moved to `PersonMatchStrategy` / `CompanyMatchStrategy`, which use a `CustomerRepository` to fetch data.
+- `CustomerUpdater` handles all field updates
+- `NormalizedCustomer` wraps `ExternalCustomer`, so the business layer has a clean interface without touching external DTOs.
+- `CustomerRepo` (with `CustomerRepoImplementation`) is the only entry point to persistence; it wraps `CustomerDataAccess`, which still talks to `CustomerDataLayer`.
+- Added `bonusPointsBalance` support for private customer with approval tests and Mockito tests to cover this functionality.
+  
 
-As ever, you have a goal with your refactoring. The scenario is that you have been asked to synchronize an additional field from the ExternalCustomer to the Customer. The field is 'bonusPointsBalance' and is an integer. Only private people have bonus points, not companies. Add the field and ensure that if the ExternalCustomer has a different number of points from the Customer, the balance is updated in our database.
+Note: I based my refactoring on the `with_tests` branch from the original repository.  
+According to its README, this branch provides a good set of unit tests that use a **Fake database** and an **Approval Testing** approach to verify that the stored customer is synchronized correctly with the external customer.  
+This setup allowed me to focus on refactoring the code while keeping test coverage intact.  
+I also added a few **Mockito tests** where necessary to cover the new `bonusPointsBalance` feature and ensure the new architecture works as expected.
 
-Branch with_tests
------------------
+### Layered Architecture
+- Coordinator: `CustomerSync` orchestrates the flow only.
+- Business services: `NormalizedCustomer`, `PersonMatchStrategy` / `CompanyMatchStrategy`, `CustomerUpdater`.
+- Repository: `CustomerRepo` interface + `CustomerRepoImpl` wrapping `CustomerDataAccess`.
+- Data layer: `CustomerDataAccess` delegates to `CustomerDataLayer` (or `FakeDatabase` in tests).
 
-The branch 'with_tests' is an alternative starting point where there are good unit tests available, and you can get started refactoring straight away. The code coverage is not quite 100%, I believe this is due to unreachable code. Another way to use this code is to read and understand the approval testing techniques used, or to re-write the tests in another style.
+This separation makes the sync logic easier to test, maintain, and extend.
+
+### Clean Code & Practices
+- Removed duplicated matching/update logic and extracted strategies and updater classes.
+- Introduced interfaces for the repository and strategies to reduce coupling.
+
+### Bonus Points Feature
+- Added `bonusPointsBalance` to both `ExternalCustomer` and `Customer`.
+- Balance is copied only for private customers (both create and update paths) and ignored for companies.
+- Covered the new behavior with approval tests and a Mockito test to ensure updates happen when values differ.
