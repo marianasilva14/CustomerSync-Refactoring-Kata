@@ -3,11 +3,11 @@ package codingdojo;
 public class CompanyMatchStrategy implements CustomerMatchStrategy {
 
     @Override
-    public CustomerMatches load(NormalizedCustomer normalizedCustomer, CustomerDataAccess customerDataAccess) {
+    public CustomerMatches load(NormalizedCustomer normalizedCustomer, CustomerRepo repository) {
         final String externalId = normalizedCustomer.getExternalId();
         final String companyNumber = normalizedCustomer.getCompanyNumber();
 
-        CustomerMatches customerMatches = customerDataAccess.loadCompanyCustomer(externalId, companyNumber);
+        CustomerMatches customerMatches = repository.loadCompanyCustomer(externalId, companyNumber);
 
         if (customerMatches.getCustomer() != null && !CustomerType.COMPANY.equals(customerMatches.getCustomer().getCustomerType())) {
             throw new ConflictException("Existing customer for externalCustomer " + externalId + " already exists and is not a company");

@@ -3,10 +3,10 @@ package codingdojo;
 public class PersonMatchStrategy implements CustomerMatchStrategy {
 
     @Override
-    public CustomerMatches load(NormalizedCustomer normalizedCustomer, CustomerDataAccess customerDataAccess) {
+    public CustomerMatches load(NormalizedCustomer normalizedCustomer, CustomerRepo repository) {
         final String externalId = normalizedCustomer.getExternalId();
 
-        CustomerMatches customerMatches = customerDataAccess.loadPersonCustomer(externalId);
+        CustomerMatches customerMatches = repository.loadPersonCustomer(externalId);
 
         if (customerMatches.getCustomer() != null) {
             if (!CustomerType.PERSON.equals(customerMatches.getCustomer().getCustomerType())) {

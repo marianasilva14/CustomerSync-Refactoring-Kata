@@ -2,7 +2,7 @@ package codingdojo;
 
 public class CustomerSync {
 
-    private final CustomerDataAccess customerDataAccess;
+    private final CustomerRepo repository;
     private final CustomerMatchStrategy personMatchStrategy;
     private final CustomerMatchStrategy companyMatchStrategy;
     private final CustomerUpdater customerUpdater;
@@ -12,10 +12,10 @@ public class CustomerSync {
     }
 
     public CustomerSync(CustomerDataAccess db) {
-        this.customerDataAccess = db;
+        this.repository = new CustomerRepoImplentation(db);
         this.personMatchStrategy = new PersonMatchStrategy();
         this.companyMatchStrategy = new CompanyMatchStrategy();
-        this.customerUpdater = new CustomerUpdater(customerDataAccess);
+        this.customerUpdater = new CustomerUpdater(repository);
     }
 
     public boolean syncWithDataLayer(ExternalCustomer externalCustomer) {
@@ -29,7 +29,7 @@ public class CustomerSync {
             customerMatchStrategy = this.personMatchStrategy;
         }
 
-        CustomerMatches customerMatches = customerMatchStrategy.load(normalizedCustomer, this.customerDataAccess);
+        CustomerMatches customerMatches = customerMatchStrategy.load(normalizedCustomer, this.repository);
         Customer customer = customerUpdater.prepareCustomerForSync(customerMatches, normalizedCustomer);
 
         boolean created = false;
@@ -49,11 +49,11 @@ public class CustomerSync {
     }
 
     private Customer updateCustomer(Customer customer) {
-        return this.customerDataAccess.updateCustomerRecord(customer);
+        return this.repository.updateCustomerRecord(customer);
     }
 
     private Customer createCustomer(Customer customer) {
-        return this.customerDataAccess.createCustomerRecord(customer);
+        return this.repository.createCustomerRecord(customer);
     }
     
 }

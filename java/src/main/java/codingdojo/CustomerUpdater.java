@@ -5,10 +5,10 @@ import java.util.Objects;
 
 public class CustomerUpdater {
 
-    private final CustomerDataAccess customerDataAccess;
+    private final CustomerRepo repository;
 
-    public CustomerUpdater(CustomerDataAccess customerDataAccess) {
-        this.customerDataAccess = customerDataAccess;
+    public CustomerUpdater(CustomerRepo repository) {
+        this.repository = repository;
     }
 
     public Customer prepareCustomerForSync(CustomerMatches customerMatches, NormalizedCustomer normalizedCustomer) {
@@ -50,7 +50,7 @@ public class CustomerUpdater {
     public void updateRelations(NormalizedCustomer normalizedCustomer, Customer customer) {
         List<ShoppingList> consumerShoppingLists = normalizedCustomer.getShoppingLists();
         for (ShoppingList consumerShoppingList : consumerShoppingLists) {
-            this.customerDataAccess.updateShoppingList(customer, consumerShoppingList);
+            repository.updateShoppingList(customer, consumerShoppingList);
         }
     }
 
@@ -64,9 +64,9 @@ public class CustomerUpdater {
         duplicate.setName(normalizedCustomer.getName());
 
         if (duplicate.getInternalId() == null) {
-            customerDataAccess.createCustomerRecord(duplicate);
+            repository.createCustomerRecord(duplicate);
         } else {
-            customerDataAccess.updateCustomerRecord(duplicate);
+            repository.updateCustomerRecord(duplicate);
         }
     }
 
